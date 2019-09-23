@@ -35,8 +35,8 @@ int main(int argc, char *argv[]){
     mat A = zeros<mat>(n,n);
     mat R = zeros<mat>(n,n);
    	vec b(n), x(n); 
-   	double dia = 2/h;
-   	double nodia = -1.0/h;
+   	double dia = 2/hh;
+   	double nodia = -1.0/hh;
    	A(0,0) = dia; 
    	R(0,0) = 1;  
    	A(0,1) = nodia;  
