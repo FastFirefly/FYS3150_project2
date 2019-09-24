@@ -28,24 +28,18 @@ int main(int argc, char *argv[]){
     start = clock();
 
     string fileout = filename;
+    fileout.append("_b_");
     double h = (double) 1/(n+1);
     double hh = h*h;
    	
    	// Intialize variables and set values
     mat A = zeros<mat>(n,n);
     mat R = zeros<mat>(n,n);
-   	vec b(n), x(n); 
    	double dia = 2/hh;
    	double nodia = -1.0/hh;
    	A(0,0) = dia; 
    	R(0,0) = 1;  
    	A(0,1) = nodia;  
-   	x(0) = h;
-
-   	vec eigact(n);		// Analytical results
-   	for (int i = 1; i < n+1; i++) {
-   		eigact(i-1) = dia + 2*nodia*cos(i*M_PI/(n+1));
-   	}
    	
     // Set values along the entire matrix
    	for (int i = 1; i < n-1; i++) {
@@ -59,6 +53,8 @@ int main(int argc, char *argv[]){
     R(n-1,n-1) = 1;
     A(n-2,n-1) = nodia; 
     A(n-1,n-2) = nodia;
+
+    vec eigact = eig_sym(A);
 
     double e = 1.0e-15;
 

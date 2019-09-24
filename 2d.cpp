@@ -28,46 +28,48 @@ int main(int argc, char *argv[]){
     start = clock();
 
     string fileout = filename;
-    fileout.append("d");
-    double h = (double) 1/(n+1);
+    fileout.append("_d_");
+
+    int r_max = 8;         // r_max equal to 8 give the closest approximation for the one-electron energies
+    int r_min = 0;
+    double h = (double) r_max/(n+1);
     double hh = h*h;
    	
    	// Intialize variables and set values
     mat A = zeros<mat>(n,n);
     mat R = zeros<mat>(n,n);
-   	vec b(n), x(n); 
-   	double dia = 2/hh;
+   	double dia0 = 2.0/hh;
    	double nodia = -1.0/hh;
-   	A(0,0) = dia; 
-   	R(0,0) = 1;  
-   	A(0,1) = nodia;  
-   	x(0) = h;
+    double dia = dia0;
+    double rho;
+   	A(0,0) = dia + h;
+   	R(0,0) = 1.0;
+   	A(0,1) = nodia;
 
-   	vec eigact(n);		// Analytical results
-   	for (int i = 1; i < n+1; i++) {
-   		eigact(i-1) = dia + 2*nodia*cos(i*M_PI/(n+1));
-   	}
-   	
     // Set values along the entire matrix
    	for (int i = 1; i < n-1; i++) {
+        rho = (i+1)*h;
+        dia = dia0 + (rho*rho);
         A(i,i-1)  = nodia;
         A(i,i)    = dia;
         R(i,i)    = 1;
         A(i,i+1)  = nodia;
     }
 
-    A(n-1,n-1) = dia; 
+    rho = rho + (n-1)*h;
+    A(n-1,n-1) = dia + rho; 
     R(n-1,n-1) = 1;
     A(n-2,n-1) = nodia; 
     A(n-1,n-2) = nodia;
 
-    double e = 1.0e-15;
+    vec eigact = eig_sym(A);
+
+    double e = 1.0e-5;
 
     int iter = 0, p=0, q=1;
-    int maxiter = 10;
     double max = 0;
     double off = 1;
-    while (off > e || iter<=maxiter){
+    while (off > e){
     	for (int i = 0; i < n; i++) {
 	    	for (int j = i+1; j < n; j++) {
 	    		double aij = fabs(A(i,j));
@@ -128,22 +130,6 @@ int main(int argc, char *argv[]){
 		}
     	iter++;
     }
-    
-    // Unit test for eigenvalues
-    unsigned test = false;
-    for (int i=0; i<n; i++) {
-    	for (int j=0; j<n; j++) {
-    		if (A(i,i) - eigact(j) < e) {
-    			test = true;
-    		}
-    	}
-    	if (!test) {
-    		printf("Unit test failed, approximated eigenvalues are not close enough to the exact eigenvalues \n");
-    		printf("Exiting program...\n");
-    		exit(1);
-    	}
-    }
-
     // Write the results in a text file
     string fileout1 = fileout;
     fileout1.append("A");
@@ -151,7 +137,8 @@ int main(int argc, char *argv[]){
     outfile << setiosflags(ios::showpoint | ios::uppercase);
 	for (int i = 0; i < n; i++) {
 	    
-	    /*for (int j = 0; j < n; j++) {
+	    for (int j = 0; j < n; j++) {
+            /*
 	    	if (A(i,j) < e) {
 	    		A(i,j) = 0;
 	    	}
@@ -186,7 +173,29 @@ int main(int argc, char *argv[]){
     }
 
 	outfile.close();
-        // Print out time used for that exponent
+
+    // Unit test for eigenvalues
+    
+    unsigned test = false;
+    for (int i=0; i<n; i++) {
+        for (int j=0; j<n; j++) {
+            if (fabs(A(i,i) - eigact(j)) < 1.0e-5) {
+                test = true;
+            }
+        }
+        if (!test) {
+            printf("Unit test failed, approximated eigenvalues are not close enough to the exact eigenvalues \n");
+            printf("Exiting program...\n");
+            exit(1);
+        }
+    }
+    printf("Number of iterations = %d\n", iter); 
+    /* For dimension 200, it takes 50014 itegration points to reproduce the analytical 
+       results with 4 leading digits after the decimal point. Result might vary depending on
+       dimension.
+       For 400, it takes 206084 integration points
+    */
+    // Print out time used for that exponent
     finish = clock();
     printf("%f\n", ((finish - start)/(double) CLOCKS_PER_SEC ));
 
