@@ -25,9 +25,9 @@ int main(int argc, char *argv[]){
     }
 
     string fileout = filename;
-    fileout.append("_d_");
+    fileout.append("_e_");
 
-    int r_max = 10;         // r_max equal to 10 give the closest approximation for the one-electron energies
+    int r_max = 10;         // r_max equal to 8 give the closest approximation for the one-electron energies
     int r_min = 0;
     double h = (double) r_max/(n+1);
     double hh = h*h;
@@ -39,14 +39,21 @@ int main(int argc, char *argv[]){
    	double nodia = -1.0/hh;
     double dia = dia0;
     double rho;
-   	A(0,0) = dia + hh;
+    // double omega = 0.05; fileout.append("w0.05_");
+    double omega = 0.01; fileout.append("w1_");
+    // double omega = 0.5; fileout.append("w2_");
+    // double omega = 1.0; fileout.append("w3_");
+    // double omega = 0.25; fileout.append("w0.25_");
+    // double omega = 5.0; fileout.append("w4_");
+    double omega2 = omega*omega;
+   	A(0,0) = dia + (hh*omega2)+(1/h);
    	R(0,0) = 1.0;
    	A(0,1) = nodia;
 
     // Set values along the entire matrix
    	for (int i = 1; i < n-1; i++) {
         rho = (i+1)*h;
-        dia = dia0 + (rho*rho);
+        dia = dia0 + (rho*rho*omega2) + (1/rho);
         A(i,i-1)  = nodia;
         A(i,i)    = dia;
         R(i,i)    = 1;
@@ -54,20 +61,21 @@ int main(int argc, char *argv[]){
     }
 
     rho = rho + (n-1)*h;
-    A(n-1,n-1) = dia + rho*rho; 
+    A(n-1,n-1) = dia + (rho*rho*omega2) + (1/rho); 
     R(n-1,n-1) = 1;
     A(n-2,n-1) = nodia; 
     A(n-1,n-2) = nodia;
 
-    double e = 1.0e-15;
+    double e = 1.0e-20;
 
     int iter = 0, p=0, q=1;
+    int maxiter = 10;
     double max = 0;
     double off = 1;
 
     clock_t start1, start2, finish1, finish2;  //  declare start and final time for each exponent to test the time of the algorithm
     start1 = clock();
-    while (off > e){
+    while (off > e || iter<=maxiter){
     	for (int i = 0; i < n; i++) {
 	    	for (int j = i+1; j < n; j++) {
 	    		double aij = fabs(A(i,j));
@@ -81,8 +89,7 @@ int main(int argc, char *argv[]){
 	    off = max;
 	    max = 0;
 
-    	// Find Jacobi rotation requires typically 3n^2 to 5n^3 rotations, and about 12n^3 to 20n^3 operations
-
+    	// Find Jacobi rotation
     	double s, c;
     	double t;
 
@@ -146,15 +153,15 @@ int main(int argc, char *argv[]){
     outfile.open(fileout1);
     outfile << setiosflags(ios::showpoint | ios::uppercase);
 	for (int i = 0; i < n; i++) {
-	    
 	    for (int j = 0; j < n; j++) {
+
             /*
 	    	if (A(i,j) < e) {
 	    		A(i,j) = 0;
 	    	}
 	    */	
-	    	outfile << setw(15) << setprecision(8) << A(i,j);
-	    }
+	       outfile << setw(15) << setprecision(8) << A(i,i);
+	   }
         outfile << endl;
     }
 
@@ -184,7 +191,6 @@ int main(int argc, char *argv[]){
 
 	outfile.close();
 
-
     // Unit test for eigenvalues
     
     unsigned test = false;
@@ -201,10 +207,10 @@ int main(int argc, char *argv[]){
         }
     }
     printf("Number of iterations = %d\n", iter); 
-    /* For 200 integration points, it takes 50014 iterations to reproduce the analytical 
+    /* For dimension 200, it takes 50014 itegration points to reproduce the analytical 
        results with 4 leading digits after the decimal point. Result might vary depending on
-       integration points.
-       It takes 200 integration points
+       dimension.
+       For 400, it takes 206084 integration points
     */
 	return 0;
 }
