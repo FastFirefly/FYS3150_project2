@@ -24,9 +24,6 @@ int main(int argc, char *argv[]){
         n = atoi(argv[2]);
     }
 
-	clock_t start, finish;  //  declare start and final time for each exponent to test the time of the algorithm
-    start = clock();
-
     string fileout = filename;
     fileout.append("_b_");
     double h = (double) 1/(n+1);
@@ -54,14 +51,28 @@ int main(int argc, char *argv[]){
     A(n-2,n-1) = nodia; 
     A(n-1,n-2) = nodia;
 
-    vec eigact = eig_sym(A);
-
     double e = 1.0e-15;
 
     int iter = 0, p=0, q=1;
     int maxiter = 10;
     double max = 0;
     double off = 1;
+
+    clock_t start1, start2, finish1, finish2;  //  declare start and final time for each exponent to test the time of the algorithm
+    start1 = clock();
+
+    start2 = clock();
+
+    vec eigact = eig_sym(A);
+    /*
+    vec eigact(n);      // Analytical results
+    for (int i = 1; i < n+1; i++) {
+        eigact(i-1) = dia + 2*nodia*cos(i*M_PI/(n+1));
+    }
+    */
+    finish2 = clock();
+    printf("For Armadillo's exact: %f\n", ((finish2 - start2)/(double) CLOCKS_PER_SEC ));
+
     while (off > e || iter<=maxiter){
     	for (int i = 0; i < n; i++) {
 	    	for (int j = i+1; j < n; j++) {
@@ -73,6 +84,27 @@ int main(int argc, char *argv[]){
 	    		}
 	    	}
 	    }
+
+        // Unit test to check if the algorithm has found the largest non-diagonal element in the matrix
+        // This unit test is commented out to not affect the time of the algorithm
+        // If you wish to use this unit test simply remove the comment symbols /* at the start and */ at the end o the unit test
+        /*
+        test1 = true;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (i!=j) {
+                    if (fabs(max)<fabs(A(i,j))) {
+                        test1 = false;
+                    }
+                }
+            }
+        }
+        if (!test1) {
+            printf("Unit test 1 failed, algorithm did not find the largest non-diagonal element in the matrix \n");
+            printf("Exiting program...\n");
+            exit(1);
+        }
+        */
 	    off = max;
 	    max = 0;
 
@@ -123,21 +155,8 @@ int main(int argc, char *argv[]){
 		}
     	iter++;
     }
-    
-    // Unit test for eigenvalues
-    unsigned test = false;
-    for (int i=0; i<n; i++) {
-    	for (int j=0; j<n; j++) {
-    		if (A(i,i) - eigact(j) < e) {
-    			test = true;
-    		}
-    	}
-    	if (!test) {
-    		printf("Unit test failed, approximated eigenvalues are not close enough to the exact eigenvalues \n");
-    		printf("Exiting program...\n");
-    		exit(1);
-    	}
-    }
+    finish1 = clock();
+    printf("For the jacobi %f\n", ((finish1 - start1)/(double) CLOCKS_PER_SEC ));
 
     // Write the results in a text file
     string fileout1 = fileout;
@@ -147,12 +166,6 @@ int main(int argc, char *argv[]){
 	for (int i = 0; i < n; i++) {
 	    
 	    for (int j = 0; j < n; j++) {
-	    	/*
-	    	if (A(i,j) < e) {
-	    		A(i,j) = 0;
-	    	}
-	    	*/
-
 	    	outfile << setw(15) << setprecision(8) << A(i,j);
 	    }
         outfile << endl;
@@ -183,9 +196,35 @@ int main(int argc, char *argv[]){
     }
 
 	outfile.close();
-        // Print out time used for that exponent
-    finish = clock();
-    printf("%f\n", ((finish - start)/(double) CLOCKS_PER_SEC ));
+    
+    // Unit test to check if the approximated eigenvalues are close enough to the exact values
+    unsigned test2 = false;
+    for (int i=0; i<n; i++) {
+        for (int j=0; j<n; j++) {
+            if (fabs(A(i,i) - eigact(j)) < 1.0e-5) {
+                test2 = true;
+            }
+        }
+        if (!test2) {
+            printf("Unit test 2 failed, approximated eigenvalues are not close enough to the exact eigenvalues \n");
+            printf("Exiting program...\n");
+            exit(1);
+        }
+    }
+
+    // Unit test to check if all eigenvectors are orthogonal
+    unsigned test3 = true;
+    mat B= zeros<mat>(n,n); B.randu();
+    for (int i = 0; i < n; i++) {
+        if ((dot(R.col(i), R.col(i))-1) > 1.0e-5) {
+            test3 = false;
+        }
+    }
+    if (!test3) {
+        printf("Unit test 3 failed, approximated eigenvectors are not orthogonal \n");
+        printf("Exiting program...\n");
+        exit(1);
+    }
 
 	return 0;
 }
