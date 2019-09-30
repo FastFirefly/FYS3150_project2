@@ -185,10 +185,10 @@ int main(int argc, char *argv[]){
 
     int r_max = 10;         // r_max equal to 10 give the closest approximation for the one-electron energies
 
+    // Initiate and set values for the elements in the matrices
     mat A = zeros<mat>(n,n);
     mat R = zeros<mat>(n,n);
-
-    set_matrix(A, R, n, r_max);
+    set_matrix(A, R, n, r_max); 
 
     // Unit test to check if the algorithm has found the largest non-diagonal element in the matrix
     double max = 0;

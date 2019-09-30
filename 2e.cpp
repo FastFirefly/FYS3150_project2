@@ -187,15 +187,14 @@ int main(int argc, char *argv[]){
     int r_max = 10;
 
     // Set the different values for the different frequencies, for the different values, uncomment them
-    // double omega = 0.01; fileout.append("w1_");
+    double omega = 0.01; fileout.append("w1_");
     // double omega = 0.5; fileout.append("w2_");
     // double omega = 1.0; fileout.append("w3_");
-    double omega = 5.0; fileout.append("w4_");
-    // double omega = 0.25; fileout.append("w0.25_");
+    // double omega = 5.0; fileout.append("w4_");
 
+    // Initiate and set values for the elements in the matrices
     mat A = zeros<mat>(n,n);
     mat R = zeros<mat>(n,n);
-
     set_matrix(A, R, n, r_max, omega);
 
     // Unit test to check if the algorithm, find_max() finds the largest non-diagonal element in the matrix

@@ -174,11 +174,9 @@ int main(int argc, char *argv[]){
     string fileout = filename;
     fileout.append("_b_");
     
-   	// Intialize variables and set values
+   	// Initiate and set values for the elements in the matrices
     mat A = zeros<mat>(n,n);
     mat R = zeros<mat>(n,n);
-   	
-    // Set values along the entire matrix
    	set_matrix(A, R, n);
 
     // Unit test to check if the algorithm has found the largest non-diagonal element in the matrix
