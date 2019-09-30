@@ -8,10 +8,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "time.h"
+
 using namespace std;
 using namespace arma;
 
-int find_max(int n, mat& A, int& p, int& q, double& max) {
+int find_max(int n, mat A, int& p, int& q, double& max) {
     // Finds the maximum non diagonal element in the matrix
     for (int i = 0; i < n; i++) {
         for (int j = i+1; j < n; j++) {
@@ -28,12 +29,12 @@ int find_max(int n, mat& A, int& p, int& q, double& max) {
 
 int jacobi(int n, mat& A, mat& R, double e, int maxiter) {
     // Finds the approximated eigenvalues and eigenvectors through jacobi's method
-
     int iter = 0, p=0, q=1;
     double max = 0;
     double off = 1;
 
     while (off > e || iter<=maxiter){
+
         find_max(n, A, p, q, max);
         
         off = max;
@@ -101,7 +102,6 @@ int set_matrix(mat& A, mat& R, int n, int r_max, double omega) {
     double nodia = -1.0/hh;
     double dia = dia0;
     double rho;
-
     double omega2 = omega*omega;
     A(0,0) = dia + (hh*omega2)+(1/h);
     R(0,0) = 1.0;
@@ -128,7 +128,7 @@ int set_matrix(mat& A, mat& R, int n, int r_max, double omega) {
 
 int write_file(int n, mat A, mat R, string fileout, vec eigact) {
     // Writes out the eigenvalues, eigenvectors and exact values found from the calculations
-    
+
     ofstream outfile;
     string fileout1 = fileout;
     fileout1.append("A");
@@ -187,17 +187,18 @@ int main(int argc, char *argv[]){
     int r_max = 10;
 
     // Set the different values for the different frequencies, for the different values, uncomment them
-    double omega = 0.01; fileout.append("w1_");
+    // double omega = 0.01; fileout.append("w1_");
     // double omega = 0.5; fileout.append("w2_");
     // double omega = 1.0; fileout.append("w3_");
-    // double omega = 5.0; fileout.append("w4_");
+    double omega = 5.0; fileout.append("w4_");
+    // double omega = 0.25; fileout.append("w0.25_");
 
     mat A = zeros<mat>(n,n);
     mat R = zeros<mat>(n,n);
 
     set_matrix(A, R, n, r_max, omega);
 
-    // Unit test to check if the algorithm has found the largest non-diagonal element in the matrix
+    // Unit test to check if the algorithm, find_max() finds the largest non-diagonal element in the matrix
     double max = 0;
     int p = 0, q = 1;
     find_max(n, A, p, q, max);
@@ -228,7 +229,7 @@ int main(int argc, char *argv[]){
     int maxiter = 10;
 
     start2 = clock();
-    jacobi(n, A, R, e, maxiter);    // Calculates the 
+    jacobi(n, A, R, e, maxiter);    // Calculates the approximated eigenvalues and their eigenvectors
     finish2 = clock();
     printf("For the jacobi %f\n", ((finish2 - start2)/(double) CLOCKS_PER_SEC ));
 
@@ -252,7 +253,6 @@ int main(int argc, char *argv[]){
 
     // Unit test to check if all eigenvectors are orthogonal
     unsigned test3 = true;
-    mat B= zeros<mat>(n,n); B.randu();
     for (int i = 0; i < n; i++) {
         if ((dot(R.col(i), R.col(i))-1) > 1.0e-5) {
             test3 = false;

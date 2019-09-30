@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "time.h"
+
 using namespace std;
 using namespace arma;
 
@@ -117,7 +118,7 @@ int set_matrix(mat& A, mat& R, int n) {
 
 int write_file(int n, mat A, mat R, string fileout, vec eigact) {
     // Writes out the eigenvalues, eigenvectors and exact values found from the calculations
-    
+
     ofstream outfile;
     string fileout1 = fileout;
     fileout1.append("A");
@@ -211,7 +212,7 @@ int main(int argc, char *argv[]){
     
     int maxiter = 10;
     start2 = clock();
-    jacobi(n, A, R, e, maxiter);    // Calculates the 
+    jacobi(n, A, R, e, maxiter);    // Calculates the approximated eigenvalues and their eigenvectors
     finish2 = clock();
     printf("For the jacobi %f\n", ((finish2 - start2)/(double) CLOCKS_PER_SEC ));
 
@@ -235,7 +236,6 @@ int main(int argc, char *argv[]){
 
     // Unit test to check if all eigenvectors are orthogonal
     unsigned test3 = true;
-    mat B= zeros<mat>(n,n); B.randu();
     for (int i = 0; i < n; i++) {
         if ((dot(R.col(i), R.col(i))-1) > 1.0e-5) {
             test3 = false;
